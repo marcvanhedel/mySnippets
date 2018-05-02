@@ -1,0 +1,252 @@
+public class Helper_Functions {
+	
+	/* English */
+	private static final List<String> tensNames = new List<String> {'',' ten',' twenty',' thirty',' forty',' fifty',' sixty',' seventy',' eighty',' ninety'};
+	private static final List<String> numNames = new List<String>{'',' one',' two',' three',' four',' five',' six',' seven',' eight',' nine',' ten',' eleven',' twelve',' thirteen',' fourteen',' fifteen',' sixteen',' seventeen',' eighteen',' nineteen'};
+
+	private static String convertLessThanOneThousand(Integer num) {
+
+		String soFar;
+
+		if (math.mod(num, 100) < 20) {
+			soFar = numNames[math.mod(num, 100)];
+			num /= 100;
+		} else {
+			soFar = numNames[math.mod(num, 10)];
+			num /= 10;
+
+			soFar = tensNames[math.mod(num, 10)] + soFar;
+			num /= 10;
+		}
+
+		if (num == 0) {
+			return soFar;
+		}
+
+		return numNames[num] + ' hundred' + soFar;
+	}
+
+	private static String convertEnglish(Long num) {
+		// 0 to 999 999 999 999
+		if (num == 0) {
+			return 'zero';
+		}
+		// pad with '0'
+		String mask = '000000000000';
+		String snumber = (mask + num).right(12);
+		// XXXnnnnnnnnn
+		Integer billions = Integer.valueOf(snumber.substring(0,3));
+		// nnnXXXnnnnnn
+		Integer millions  = Integer.valueOf(snumber.substring(3,6));
+		// nnnnnnXXXnnn
+		Integer hundredThousands = Integer.valueOf(snumber.substring(6,9));
+		// nnnnnnnnnXXX
+		Integer thousands = Integer.valueOf(snumber.substring(9,12));
+
+		String tradBillions;
+		if(billions == 0) {
+			tradBillions = '';
+		} else if (billions == 1) {
+			tradBillions = convertLessThanOneThousand(billions) + ' billion ';
+		} else {
+			tradBillions = convertLessThanOneThousand(billions) + ' billion ';
+		}
+		String result =  tradBillions;
+
+		String tradMillions;
+		if(millions == 0) {
+			tradMillions = '';
+		} else if (millions == 1) {
+			tradMillions = convertLessThanOneThousand(millions) + ' million ';
+		} else {
+			tradMillions = convertLessThanOneThousand(millions) + ' million ';
+		}
+		result =  result + tradMillions;
+
+		String tradHundredThousands;
+		if (hundredThousands == 0) {
+			tradHundredThousands = '';
+		} else if (hundredThousands == 1) {
+			tradHundredThousands = 'one thousand ';
+		} else {
+			tradHundredThousands = convertLessThanOneThousand(hundredThousands) + ' thousand ';
+		}
+		result =  result + tradHundredThousands;
+
+		String tradThousand;
+		tradThousand = convertLessThanOneThousand(thousands);
+		result =  result + tradThousand;
+
+		// remove extra spaces!
+		return result.replaceAll('^\\s+', '').replaceAll('\\b\\s{2,}\\b', ' ');
+	}
+
+	/* Dutch */	
+	private static final List<String> Eenheden = new List<String>{'nul', 'een', 'twee', 'drie', 'vier', 'vijf', 'zes', 'zeven', 'acht', 'negen', 'tien', 'elf', 'twaalf', 'dertien', 'veertien', 'vijftien',  'zestien', 'zeventien', 'achttien', 'negentien'};
+	private static final List<String> Tientallen = new List<String>{'<nietnodig>', '<nietnodig>', 'twintig', 'dertig', 'veertig', 'vijftig', 'zestig', 'zeventig', 'tachtig', 'negentig'};
+		
+	public static String Render(Long i, Integer iEn, Integer iHond) {
+		String s = '';
+		// 0..19: enum
+		if( i<20 ) {
+			return Eenheden[i.intValue()];
+		}
+
+		// 19..99: no eenheden when 0, always 'en' to connect (but 'ën' for 2 and 3)
+		if( math.mod(i, 10)==0 ) { 
+			s='';
+		} else { 
+			s=Eenheden[math.mod(i.intValue(),10)];
+			if( math.mod(i,10)==2 || math.mod(i,10)==3 ) { 
+				s+='ën';
+			} else {
+				s+='en';
+			}
+		}
+		if( i<100 ) {
+			Integer j = Math.floor(i/10).intValue();
+			return s + Tientallen[j];
+		}
+		// 100..199: add 'en' as in iEn (for 2 see ANS page 290)
+		if( (iEn==3) || ((iEn==2) && (math.mod(i, 100) <13)) ) {
+			s='en '; 
+		} else { 
+			s='';
+		}
+		if( math.mod(i,100)==0) {
+			s='';
+		} else { 
+			s=' '+s+Render(math.mod(i,100), iEn, iHond);
+		} // only for 100
+		if( i<200 ) {
+			return 'honderd' + s;
+		}
+		// 199..999
+		if( iEn==3) {
+			s='en ';
+		} else {
+			s='';
+		}
+		if( math.mod(i,100)==0) {
+			s=''; 
+		} else {
+			s=' '+s+Render(math.mod(i,100), iEn, iHond);
+		}
+		if( i<1000 ) {
+			Integer j = Math.floor(i/100).intValue();
+			return Eenheden[j] + 'honderd' + s;
+		}
+		// 1000..1099: add 'en' as in iEn (for 2 see ANS page 290)
+		if( (iEn==3) || ((iEn==2) && (math.mod(i,1000)<13)) ) {
+			s='en '; 
+		} else {
+			s='';
+		}
+		if( math.mod(i,1000) ==0) {
+			s='';
+		} else {
+			s=' ' + s + Render(math.mod(i,100), iEn, iHond); 
+		} 
+		// only for 1000
+		if( i<1100 ) {
+			return 'duizend' + s;
+		}
+		// 1100..9999
+		if( iHond==3) {
+		// 1100..1999
+			if( i<2000 ) {
+				return 'duizend ' + Render(math.mod(i,1000), iEn, iHond);
+			}
+		// 2000..9999
+			if( math.mod(i,1000)==0 ) {
+				s='';
+			} else { 
+				s=' '+Render(math.mod(i,1000), iEn, iHond); 
+			}
+			if( i<10000 ) {
+				Integer j = Math.floor(i/1000).intValue();
+				return Eenheden[j] + 'duizend' + s;
+			}
+		} else {
+			if( iHond==1 ) {
+				s='honderd'; 
+			} else { 
+				s='';
+			}
+			if( math.mod(i,100)==0 ) {
+				s='honderd'; 
+			} else {
+				s=s+' '+Render(math.mod(i,100), iEn, iHond); 
+			}
+			if( i<10000 ) {
+				Integer j = Math.floor(i/100).intValue();
+				return Render(j, iEn, iHond) + s;
+			}
+		}
+		// 10 000 .. 999 999: add 'en' as in iEn (for 2 see ANS page 290)
+		if( math.mod(i,1000)==0 ) {
+			s='';
+		} else {
+			s=' ' + Render(math.mod(i,1000), iEn, iHond);
+		}
+		if( i<1000000 ) {
+			Integer j = Math.floor(i/1000).intValue();
+			return Render(j, iEn, iHond) + 'duizend' + s;
+		}
+		//
+		if( math.mod(i,1000000)==0 ) { 
+			s=''; 
+		} else { 
+			s=' ' + Render(math.mod(i,1000000), iEn, iHond); 
+		}
+		if( i<1000000000 ) {
+			Integer j = Math.floor(i/1000000).intValue();
+			return Render(j, iEn, iHond) + ' miljoen' + s;
+		}
+		/*
+		if( math.mod(i,1000000000)==0 ) {
+			s='';
+		} else {
+			s=' ' + Render(math.mod(i,1000000000), iEn, iHond);
+		}
+		if( i<1000000000000 ) {
+			Integer j = Math.floor(i/1000000000).intValue();
+			return Render(j, iEn, iHond) + ' miljard' + s;
+		}
+		*/
+		return 'te veel';
+	}
+
+	
+	@InvocableMethod (label='Write out Number')
+	public static void Bedraguitschrijven(List<HO__c> hoList) {
+	//		return convertEnglish(inputValue);
+		Long inputValue = 0;
+		Long inputDecimals = 0;
+
+		for(HO__c ho :hoList) {
+			System.debug('Uitschrijven: ' + ho.Total_Rent__c);
+			
+			if(ho.Total_Rent__c == null){
+				return;
+			}
+			
+			if(ho.Total_Rent__c > 0) {
+			   inputValue = ho.Total_Rent__c.round(System.RoundingMode.FLOOR);
+			   inputDecimals = ((ho.Total_Rent__c - inputValue) * 100).round(System.RoundingMode.FLOOR);
+				if (inputDecimals > 0) {
+					ho.Total_Rent_Phrase__c = Render(inputValue,2,1) + ' euro en ' + Render(inputDecimals, 2, 1) + ' cent';
+				} else {
+					ho.Total_Rent_Phrase__c = Render(inputValue,2,1) + ' euro';
+				}
+			}
+			System.debug('Uitschrijven: '+ ho.Total_Rent_Phrase__c);
+		}
+		try {
+			upsert hoList;
+		}
+		catch(Exception e) {
+			System.debug('FOUT: ' + e.getMessage());
+		}
+	}
+}
